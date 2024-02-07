@@ -1,0 +1,72 @@
+version: '3.5'
+
+# 日志配置
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "10"
+
+# 网桥
+networks:
+  backend:
+    driver: ${NETWORKS_DRIVER}
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.10.10.0/24
+
+volumes:
+  mysql:
+    driver: ${VOLUMES_DRIVER}
+  redis:
+    driver: ${VOLUMES_DRIVER}
+
+
+services:
+  ### Php ################################################
+  php:
+    build:
+      context: ./php
+      #args:
+        #PHP_VERSION: ${PHP_VERSION}
+        #SWOOLE_VERSION: ${SWOOLE_VERSION}
+        #AMQP_VERSION: ${AMQP_VERSION}
+    ports:
+      - "9501:9501"
+    volumes:
+      - ./php/config/php.ini:/usr/local/etc/php/php.ini
+      - ./php/config/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./php/config/php-fpm.d:/usr/local/etc/php-fpm.d
+    networks:
+      - backend
+
+  ### Redis ################################################
+  redis:
+    build:
+      context: ./redis
+    volumes:
+      - ./redis/redis.conf/:/usr/local/etc/redis.conf
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - backend
+    logging: *default-logging
+
+  ### MySQL ################################################
+  mysql:
+    build:
+      context: ./mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${DATA_PATH}/mysql:/var/lib/mysql
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/my.cnf
+    ports:
+      - "${MYSQL_PORT}:3306"
+    networks:
+      - backend
+    logging: *default-logging
