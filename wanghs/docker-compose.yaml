@@ -10,7 +10,7 @@ x-logging: &default-logging
 # 网桥
 networks:
   backend:
-    driver: ${NETWORKS_DRIVER}
+    driver: bridge
     ipam:
       driver: default
       config:
@@ -70,3 +70,18 @@ services:
     networks:
       - backend
     logging: *default-logging
+
+  ### RabbitMq ################################################
+  rabbitmq:
+      container_name: "${ENV}-rabbitmq3.8"
+      build:
+        context: ./rabbitmq
+      environment:
+        - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+        - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      ports:
+        - "${RABBITMQ_PORT}:5672"
+        - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+      networks:
+        - backend
+      logging: *default-logging

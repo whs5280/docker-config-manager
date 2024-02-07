@@ -1,0 +1,29 @@
+version: '3.5'
+
+# 网桥
+networks:
+  backend:
+    driver: bridge
+
+services:
+  ### RabbitMq ################################################
+  rabbitmq:
+    container_name: ${ENV}-rabbitmq3.8
+    image: wanghangsheng/rabbitmq-3.8-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
+  ### Nginx ################################################
+  nginx:
+    container_name: ${ENV}-nginx
+    image: nginx:1.17.9
+    ports:
+      - "80:80"
+    networks:
+      - backend
